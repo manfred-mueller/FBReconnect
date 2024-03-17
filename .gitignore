@@ -9,6 +9,8 @@
 *.user
 *.userosscache
 *.sln.docstates
+getFritzInfo.htm
+tr64desc.xml
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
