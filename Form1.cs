@@ -1,13 +1,16 @@
-﻿using System;
+﻿using Open.Nat;
+using System;
 using System.Drawing;
 using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Media.Imaging;
+using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
 
@@ -28,6 +31,7 @@ namespace FBReconnect
         private Label fbVersionLabel;
         private PictureBox reconnectButton;
         private PictureBox exitButton;
+        public IPHostEntry hostEntry;
         public string pubIp;
         public string privIp;
         public static string noIp = "";
@@ -42,7 +46,7 @@ namespace FBReconnect
             if (!CheckNetworkConnection())
             {
                 // Display an error message with an error icon and exit the application
-                MessageBox.Show(FBReconnect.Properties.Resources.NoWorkingNetworkConnectionExitingApplication, FBReconnect.Properties.Resources.Error, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(Properties.Resources.NoWorkingNetworkConnectionExitingApplication, Properties.Resources.Error, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 Application.Exit();
                 return; // Exit the constructor
             }
@@ -70,14 +74,14 @@ namespace FBReconnect
         public static Bitmap PngFromIcon(Icon icon)
         {
             Bitmap png = null;
-            using (var iconStream = new System.IO.MemoryStream())
+            using (var iconStream = new MemoryStream())
             {
                 icon.Save(iconStream);
                 var decoder = new IconBitmapDecoder(iconStream,
                     BitmapCreateOptions.PreservePixelFormat,
                     BitmapCacheOption.None);
 
-                using (var pngSteam = new System.IO.MemoryStream())
+                using (var pngSteam = new MemoryStream())
                 {
                     var encoder = new PngBitmapEncoder();
                     encoder.Frames.Add(decoder.Frames[0]);
@@ -162,9 +166,8 @@ namespace FBReconnect
             FBVersion = GetDisplay(xml);
             FBName = GetModelName(xml);
             FBSerial = GetSerialNumber(xml);
-            // Get the private IP address
-            privIp = GetPrivateIp(xml);
-
+            IPAddress[] ipaddress = Dns.GetHostAddresses("fritz.box");
+            privIp = ipaddress[0].ToString();
             // Call the asynchronous initialization method
             await InitializeAsync();
 
@@ -297,7 +300,6 @@ namespace FBReconnect
             tableLayoutPanel.Controls.Add(privateIpAddressFormLabel, 1, 2); // Place the label in the third row, second column
             tableLayoutPanel.Controls.Add(exitButton, 2, 2); // Place the exit button in the third row, third column
         }
-        // Event handler for when the link label is clicked
         private void CenterFormOnScreen()
         {
             // Calculate the center of the screen
@@ -344,9 +346,9 @@ namespace FBReconnect
                     await ReconnectFritzBoxAsync();
 
                     // Show success notification
-                    ShowNotificationToast("Info", Properties.Resources.FritzBoxHasBeenSuccessfullyReset, 5);
-                    var newIP = await GetIPAddressAsync();
-                    ShowNotificationToast("Info", string.Format(Properties.Resources.OldIpAddress + "{0}{1}" + Properties.Resources.NewIpAddress + "{2}", pubIp, Environment.NewLine, newIP), 10);
+                    ShowNotificationToast("None", Properties.Resources.FritzBoxHasBeenSuccessfullyReset, 5);
+                    var newIP = await GetPublicFritzBoxIp();
+                    ShowNotificationToast("None", string.Format(Properties.Resources.OldIpAddress + "{0}{1}" + Properties.Resources.NewIpAddress + "{2}", pubIp, Environment.NewLine, newIP), 10);
                     pubIp = newIP;
                     publicIpAddressFormLabel.Text = string.Format(Properties.Resources.PublicIP + "{0}{1}", Environment.NewLine, pubIp);
                     ipAddressMenuLabel.Text = string.Format(Properties.Resources.IP + "{0}", pubIp);
@@ -412,6 +414,19 @@ namespace FBReconnect
             }
         }
 
+        static async Task<string> GetPublicFritzBoxIp()
+        {
+            // Create a NAT discovery instance
+            var natDiscoverer = new NatDiscoverer();
+
+            // Discover NAT devices in the network
+            var device = await natDiscoverer.DiscoverDeviceAsync();
+
+            // Get the external IP address
+            var ip = await device.GetExternalIPAsync();
+
+            return ip.ToString();
+        }
         private void ExitMenuItem_Click(object sender, EventArgs e)
         {
             notifyIcon.Visible = false;
@@ -521,9 +536,9 @@ namespace FBReconnect
             }
         }
 
-        private static System.Xml.XmlNamespaceManager CreateNamespaceManager(XElement element)
+        private static XmlNamespaceManager CreateNamespaceManager(XElement element)
         {
-            var nsManager = new System.Xml.XmlNamespaceManager(new System.Xml.NameTable());
+            var nsManager = new XmlNamespaceManager(new NameTable());
             nsManager.AddNamespace("ns", element.GetDefaultNamespace().NamespaceName);
             return nsManager;
         }
