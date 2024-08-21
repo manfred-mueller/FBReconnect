@@ -105,4 +105,7 @@
     <None Include="icons\exit.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>D:\Tools\sign.cmd $(TargetPath) &amp;&amp; iscc /Q $(SolutionDir)InstallScript.iss</PostBuildEvent>
+  </PropertyGroup>
 </Project>

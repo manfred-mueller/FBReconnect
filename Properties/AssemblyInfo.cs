@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("FBReconnect")]
 [assembly: AssemblyDescription("Tool to reconnect the Fritz!Box")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("NASS e.K.")]
 [assembly: AssemblyProduct("FBReconnect")]
 [assembly: AssemblyCopyright("©2024, Manfred Mueller")]
 [assembly: AssemblyTrademark("")]
