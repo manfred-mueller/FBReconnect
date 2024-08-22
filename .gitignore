@@ -11,6 +11,7 @@
 *.sln.docstates
 getFritzInfo.htm
 tr64desc.xml
+manifests/
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs

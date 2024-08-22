@@ -139,7 +139,7 @@
     <value>Neue IP-Adresse: </value>
   </data>
   <data name="FritzBoxNotFoundOrNotReachable" xml:space="preserve">
-    <value>Fritz!Box nicht gefunden oder nicht erreichbar.</value>
+    <value>Keinen Fritz!Box-Router gefunden oder Box nicht erreichbar.</value>
   </data>
   <data name="DisplayElementNotFound" xml:space="preserve">
     <value>Anzeigeelement nicht gefunden.</value>

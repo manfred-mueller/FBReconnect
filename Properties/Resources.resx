@@ -170,7 +170,7 @@
     <value>New ip address: </value>
   </data>
   <data name="FritzBoxNotFoundOrNotReachable" xml:space="preserve">
-    <value>Fritz!Box not found or not reachable.</value>
+    <value>No Fritz!Box router or box not reachable.</value>
   </data>
   <data name="DisplayElementNotFound" xml:space="preserve">
     <value>Display element not found.</value>

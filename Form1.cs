@@ -2,6 +2,7 @@
 using System;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.NetworkInformation;
@@ -32,13 +33,14 @@ namespace FBReconnect
         private PictureBox reconnectButton;
         private PictureBox exitButton;
         public IPHostEntry hostEntry;
+        public string xml;
         public string pubIp;
         public string privIp;
         public static string noIp = "";
         public string FBVersion;
         public string FBName;
         public string FBSerial;
-        public string fbUrl = "http://fritz.box:49000/tr64desc.xml";
+        public string fbUrl;
 
         public Form1()
         {
@@ -94,7 +96,7 @@ namespace FBReconnect
 
         private bool checkFritzBox()
         {
-            if (CheckNetworkConnection() && CheckFritzBoxNameResolution() && CheckFritzBoxReachability())
+            if (CheckNetworkConnection() && CheckFritzBoxReachability())
             {
                 return true;
             }
@@ -120,18 +122,6 @@ namespace FBReconnect
             }
         }
 
-        private bool CheckFritzBoxNameResolution()
-        {
-            try
-            {
-                IPHostEntry hostEntry = Dns.GetHostEntry("fritz.box");
-                return true;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
 
         private bool CheckFritzBoxReachability()
         {
@@ -139,13 +129,57 @@ namespace FBReconnect
             {
                 using (var client = new WebClient())
                 {
-                    client.DownloadData("http://fritz.box:49000/tr64desc.xml");
+                    client.DownloadData(fbUrl);
                     return true;
                 }
             }
             catch (Exception)
             {
+                MessageBox.Show(Properties.Resources.FritzBoxNotFoundOrNotReachable, Properties.Resources.Error, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Application.Exit();
                 return false;
+            }
+        }
+        public static IPAddress GetDefaultGateway()
+        {
+            IPAddress result = null;
+            var cards = NetworkInterface.GetAllNetworkInterfaces().ToList();
+            if (cards.Any())
+            {
+                foreach (var card in cards)
+                {
+                    var props = card.GetIPProperties();
+                    if (props == null)
+                        continue;
+
+                    var gateways = props.GatewayAddresses;
+                    if (!gateways.Any())
+                        continue;
+
+                    var gateway =
+                        gateways.FirstOrDefault(g => g.Address.AddressFamily.ToString() == "InterNetwork");
+                    if (gateway == null)
+                        continue;
+
+                    result = gateway.Address;
+                    break;
+                };
+            }
+
+            return result;
+        }
+        private string FritzBoxIP()
+        {
+            try
+            {
+                IPAddress[] ipaddress = Dns.GetHostAddresses(GetDefaultGateway().ToString());
+                return ipaddress[0].ToString();
+            }
+            catch (Exception)
+            {
+                MessageBox.Show(Properties.Resources.FritzBoxNotFoundOrNotReachable, Properties.Resources.Error, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Application.Exit();
+                return "";
             }
         }
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
@@ -161,13 +195,13 @@ namespace FBReconnect
 
         private async void InitializeApp()
         {
+            fbUrl = String.Format("http://{0}:49000/tr64desc.xml", GetDefaultGateway());
             string xml = await FetchXmlFromUrl(fbUrl);
 
             FBVersion = GetDisplay(xml);
             FBName = GetModelName(xml);
             FBSerial = GetSerialNumber(xml);
-            IPAddress[] ipaddress = Dns.GetHostAddresses("fritz.box");
-            privIp = ipaddress[0].ToString();
+            privIp = FritzBoxIP();
             // Call the asynchronous initialization method
             await InitializeAsync();
 
@@ -390,7 +424,8 @@ namespace FBReconnect
         {
             try
             {
-                var httpRequest = (HttpWebRequest)WebRequest.Create("http://fritz.box:49000/igdupnp/control/WANIPConn1");
+                String Request = String.Format("http://{0}:49000/igdupnp/control/WANIPConn1", GetDefaultGateway());
+                var httpRequest = (HttpWebRequest)WebRequest.Create(Request);
                 httpRequest.Method = "POST";
                 httpRequest.Headers["SOAPACTION"] = "urn:schemas-upnp-org:service:WANIPConnection:1#ForceTermination";
                 httpRequest.ContentType = "text/xml; charset=utf-8";
@@ -465,11 +500,18 @@ namespace FBReconnect
         static async Task<string> FetchXmlFromUrl(string url)
         {
             using (HttpClient client = new HttpClient())
-            {
-                HttpResponseMessage response = await client.GetAsync(url);
-                response.EnsureSuccessStatusCode();
-                return await response.Content.ReadAsStringAsync();
-            }
+                try
+                {
+                    HttpResponseMessage response = await client.GetAsync(url);
+                    response.EnsureSuccessStatusCode();
+                    return await response.Content.ReadAsStringAsync();
+                }
+                catch (Exception)
+                {
+                    MessageBox.Show(Properties.Resources.FritzBoxNotFoundOrNotReachable, Properties.Resources.Error, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    Application.Exit();
+                    return "";
+                }
         }
 
         static string GetDisplay(string xml)

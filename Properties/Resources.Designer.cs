@@ -137,7 +137,7 @@ namespace FBReconnect.Properties {
         }
         
         /// <summary>
-        ///   Sucht eine lokalisierte Zeichenfolge, die Fritz!Box not found or not reachable. ähnelt.
+        ///   Sucht eine lokalisierte Zeichenfolge, die No Fritz!Box router or box not reachable. ähnelt.
         /// </summary>
         internal static string FritzBoxNotFoundOrNotReachable {
             get {
