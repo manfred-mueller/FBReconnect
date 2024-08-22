@@ -308,7 +308,10 @@ namespace FBReconnect
             reconnectButton.Anchor = AnchorStyles.None;
             reconnectButton.Dock = DockStyle.Fill;
             reconnectButton.Size = size;
+            reconnectButton.Cursor = Cursors.Hand;
             reconnectButton.Click += ReconnectFritzBox_Click;
+            System.Windows.Forms.ToolTip ToolTip2 = new System.Windows.Forms.ToolTip();
+            ToolTip2.SetToolTip(this.reconnectButton, Properties.Resources.ReconnectFritzBox);
 
             // Create and configure the exit button
             exitButton = new PictureBox();
@@ -317,7 +320,10 @@ namespace FBReconnect
             exitButton.Anchor = AnchorStyles.None;
             exitButton.Dock = DockStyle.Fill;
             exitButton.Size = size;
+            exitButton.Cursor = Cursors.Hand;
             exitButton.Click += ExitButton_Click;
+            System.Windows.Forms.ToolTip ToolTip1 = new System.Windows.Forms.ToolTip();
+            ToolTip1.SetToolTip(this.exitButton, Properties.Resources.Exit);
 
             // Create and configure the private IP address label
             privateIpAddressFormLabel = new Label();
