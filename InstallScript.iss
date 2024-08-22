@@ -52,6 +52,7 @@ Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: 
 
 [Files]
 Source: "bin\Release\{#MyAppExeName}"; DestDir: "{app}"; DestName: "{#MyAppExeName}"; Flags: confirmoverwrite
+Source: "bin\Release\Open.Nat.dll"; DestDir: "{app}"; DestName: Open.Nat.dll; Flags: confirmoverwrite
 
 [Code]
 
