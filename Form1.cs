@@ -6,8 +6,8 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.NetworkInformation;
-using System.Net.Sockets;
-using System.Reflection;
+using System.Text.RegularExpressions;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Media.Imaging;
@@ -41,6 +41,7 @@ namespace FBReconnect
         public string FBName;
         public string FBSerial;
         public string fbUrl;
+        public bool isFitzBox;
 
         public Form1()
         {
@@ -135,8 +136,6 @@ namespace FBReconnect
             }
             catch (Exception)
             {
-                MessageBox.Show(Properties.Resources.FritzBoxNotFoundOrNotReachable, Properties.Resources.Error, MessageBoxButtons.OK, MessageBoxIcon.Error);
-                Application.Exit();
                 return false;
             }
         }
@@ -168,20 +167,6 @@ namespace FBReconnect
 
             return result;
         }
-        private string FritzBoxIP()
-        {
-            try
-            {
-                IPAddress[] ipaddress = Dns.GetHostAddresses(GetDefaultGateway().ToString());
-                return ipaddress[0].ToString();
-            }
-            catch (Exception)
-            {
-                MessageBox.Show(Properties.Resources.FritzBoxNotFoundOrNotReachable, Properties.Resources.Error, MessageBoxButtons.OK, MessageBoxIcon.Error);
-                Application.Exit();
-                return "";
-            }
-        }
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             if (e.CloseReason == CloseReason.UserClosing)
@@ -196,12 +181,21 @@ namespace FBReconnect
         private async void InitializeApp()
         {
             fbUrl = String.Format("http://{0}:49000/tr64desc.xml", GetDefaultGateway());
-            string xml = await FetchXmlFromUrl(fbUrl);
+            isFitzBox = CheckFritzBoxReachability();
 
-            FBVersion = GetDisplay(xml);
-            FBName = GetModelName(xml);
-            FBSerial = GetSerialNumber(xml);
-            privIp = FritzBoxIP();
+            if (!isFitzBox)
+            {
+                string xml = await FetchXmlFromUrl(fbUrl);
+                FBVersion = GetDisplay(xml);
+                FBName = GetModelName(xml);
+                FBSerial = GetSerialNumber(xml);
+            } else
+            {
+                FBVersion = "-";
+                FBName = Properties.Resources.NoFritzBox;
+                FBSerial = "-";
+            }
+            privIp = GetDefaultGateway().ToString();
             // Call the asynchronous initialization method
             await InitializeAsync();
 
@@ -211,6 +205,7 @@ namespace FBReconnect
 
         public async Task InitializeAsync()
         {
+
             // Get the public IP address
             pubIp = await GetIPAddressAsync();
 
@@ -271,13 +266,17 @@ namespace FBReconnect
 
             // Center the form on the screen
             CenterFormOnScreen();
+
+            // Check whether we are running a Fritz!Box
+            if (!isFitzBox)
+            ShowNotificationToast("None", Properties.Resources.FritzBoxNotFoundOrNotReachable, 10);
         }
 
         private void AddControlsToTableLayoutPanel()
         {
             // Create and configure the IP address label prefix
             publicIpAddressFormLabelPrefix = new PictureBox();
-            publicIpAddressFormLabelPrefix.Image = Bitmap.FromHicon(new Icon(Properties.Resources.world_arrow, new Size(48, 48)).Handle);
+            publicIpAddressFormLabelPrefix.Image = Bitmap.FromHicon(new Icon(Properties.Resources.connect, new Size(48, 48)).Handle);
             publicIpAddressFormLabelPrefix.SizeMode = PictureBoxSizeMode.Zoom; // Set PictureBox to use Zoom mode
             publicIpAddressFormLabelPrefix.Anchor = AnchorStyles.None; // Align center
             publicIpAddressFormLabelPrefix.Dock = DockStyle.Fill; // Align vertically in the middle
@@ -308,10 +307,18 @@ namespace FBReconnect
             reconnectButton.Anchor = AnchorStyles.None;
             reconnectButton.Dock = DockStyle.Fill;
             reconnectButton.Size = size;
-            reconnectButton.Cursor = Cursors.Hand;
-            reconnectButton.Click += ReconnectFritzBox_Click;
             System.Windows.Forms.ToolTip ToolTip2 = new System.Windows.Forms.ToolTip();
-            ToolTip2.SetToolTip(this.reconnectButton, Properties.Resources.ReconnectFritzBox);
+            if (!isFitzBox)
+            {
+                reconnectButton.Cursor = Cursors.Hand;
+                reconnectButton.Click += ReconnectFritzBox_Click;
+                ToolTip2.SetToolTip(this.reconnectButton, Properties.Resources.ReconnectFritzBox);
+            }
+            else
+            {
+                reconnectButton.Cursor = Cursors.No;
+                ToolTip2.SetToolTip(this.reconnectButton, Properties.Resources.FritzBoxNotFoundOrNotReachable);
+            }
 
             // Create and configure the exit button
             exitButton = new PictureBox();
@@ -374,6 +381,60 @@ namespace FBReconnect
             Application.Exit();
         }
 
+        private string GetDeviceName(string ip)
+        {
+            WebClient myWebClient = new WebClient();
+            try
+            {
+                System.IO.Stream s = myWebClient.OpenRead("http://" + ip);
+                var sr = new System.IO.StreamReader(s);
+                while (!sr.EndOfStream)
+                {
+                    var L = sr.ReadLine();
+                    var sb = new StringBuilder();
+                    var st = 0;
+                    var end = 0;
+                    if ((st = L.ToLower().IndexOf("<title>")) != -1)
+                    {
+                        sb.Append(L);
+                        while ((end = L.ToLower().IndexOf("</title>")) == -1)
+                        {
+                            L = sr.ReadLine();
+                            sb.Append(L);
+                        }
+                        sr.Close();
+                        s.Close();
+                        myWebClient.Dispose();
+                        var title = sb.ToString().Substring(st + 7, end - st - 7);
+                        Regex r = new Regex("&#[^;]+;");
+                        title = r.Replace(title, delegate (Match match)
+                        {
+                            string value = match.Value.ToString().Replace("&#", "").Replace(";", "");
+                            int asciiCode;
+                            if (int.TryParse(value, out asciiCode))
+                                return Convert.ToChar(asciiCode).ToString();
+                            else
+                                return value;
+                        });
+                        return $"Router/AP ({title})";
+                    }
+                }
+                sr.Close();
+                s.Close();
+                myWebClient.Dispose();
+            }
+            catch (System.Net.WebException ex)
+            {
+                var response = ex.Response as HttpWebResponse;
+                if (response == null)
+                    return "";
+
+                var name = response.Headers?["WWW-Authenticate"]?.Substring(12).Trim('"');
+                myWebClient.Dispose();
+                return name;
+            }
+            return "";
+        }
         private async void ReconnectFritzBox_Click(object sender, EventArgs e)
         {
             if (checkFritzBox())

@@ -193,4 +193,10 @@
   <data name="PrivateIP" xml:space="preserve">
     <value>Local IP</value>
   </data>
+  <data name="NoFritzBox" xml:space="preserve">
+    <value>No Fritz!Box</value>
+  </data>
+  <data name="logo" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\icons\logo.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
 </root>

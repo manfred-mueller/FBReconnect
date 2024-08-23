@@ -164,6 +164,16 @@ namespace FBReconnect.Properties {
         }
         
         /// <summary>
+        ///   Sucht eine lokalisierte Ressource vom Typ System.Drawing.Icon ähnlich wie (Symbol).
+        /// </summary>
+        internal static System.Drawing.Icon logo {
+            get {
+                object obj = ResourceManager.GetObject("logo", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Sucht eine lokalisierte Zeichenfolge, die ModelName element not found. ähnelt.
         /// </summary>
         internal static string ModelNameElementNotFound {
@@ -188,6 +198,15 @@ namespace FBReconnect.Properties {
         internal static string NewIpAddress {
             get {
                 return ResourceManager.GetString("NewIpAddress", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Sucht eine lokalisierte Zeichenfolge, die No Fritz!Box ähnelt.
+        /// </summary>
+        internal static string NoFritzBox {
+            get {
+                return ResourceManager.GetString("NoFritzBox", resourceCulture);
             }
         }
         

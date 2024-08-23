@@ -96,6 +96,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="FBReconnect.ico" />
+    <None Include="icons\logo.ico" />
     <None Include="icons\reset.ico" />
     <None Include="icons\refresh.ico" />
     <None Include="icons\reload.ico" />

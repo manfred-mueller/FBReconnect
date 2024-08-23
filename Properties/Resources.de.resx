@@ -165,4 +165,7 @@
   <data name="PrivateIP" xml:space="preserve">
     <value>Lokale IP</value>
   </data>
+  <data name="NoFritzBox" xml:space="preserve">
+    <value>Keine Fritz!Box</value>
+  </data>
 </root>
