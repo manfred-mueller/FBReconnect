@@ -183,7 +183,7 @@ namespace FBReconnect
             fbUrl = String.Format("http://{0}:49000/tr64desc.xml", GetDefaultGateway());
             isFitzBox = CheckFritzBoxReachability();
 
-            if (!isFitzBox)
+            if (isFitzBox)
             {
                 string xml = await FetchXmlFromUrl(fbUrl);
                 FBVersion = GetDisplay(xml);
