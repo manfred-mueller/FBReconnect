@@ -1,4 +1,7 @@
 ﻿
+using System.Reflection;
+using System;
+
 namespace FBReconnect
 {
     partial class Form1
@@ -32,7 +35,6 @@ namespace FBReconnect
             this.components = new System.ComponentModel.Container();
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(330, 145);
-            this.Text = System.Reflection.Assembly.GetExecutingAssembly().GetName().Name;
         }
 
         #endregion

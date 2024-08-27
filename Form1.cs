@@ -14,6 +14,7 @@ using System.Windows.Media.Imaging;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
+using System.Reflection;
 
 namespace FBReconnect
 {
@@ -270,6 +271,9 @@ namespace FBReconnect
             // Check whether we are running a Fritz!Box
             if (!isFitzBox)
             ShowNotificationToast("None", Properties.Resources.FritzBoxNotFoundOrNotReachable, 10);
+
+            Version shortVersion = Assembly.GetExecutingAssembly().GetName().Version;
+            this.Text = string.Format(System.Reflection.Assembly.GetExecutingAssembly().GetName().Name + $" {shortVersion.Major}.{shortVersion.Minor}.{shortVersion.Build}");
         }
 
         private void AddControlsToTableLayoutPanel()
