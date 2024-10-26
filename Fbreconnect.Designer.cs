@@ -4,7 +4,7 @@ using System;
 
 namespace FBReconnect
 {
-    partial class Form1
+    partial class Fbreconnect
     {
         /// <summary>
         /// Erforderliche Designervariable.

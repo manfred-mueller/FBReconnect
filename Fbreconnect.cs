@@ -18,7 +18,7 @@ using System.Reflection;
 
 namespace FBReconnect
 {
-    public partial class Form1 : Form
+    public partial class Fbreconnect : Form
     {
         public Icon appIcon = Properties.Resources.FBReconnect;
         private NotifyIcon notifyIcon;
@@ -44,7 +44,7 @@ namespace FBReconnect
         public string fbUrl;
         public bool isFitzBox;
 
-        public Form1()
+        public Fbreconnect()
         {
             // Check if there is a working network connection
             if (!CheckNetworkConnection())
@@ -96,6 +96,21 @@ namespace FBReconnect
             return png;
         }
 
+        public static string GetIPAddress(string hostname)
+        {
+            IPHostEntry host;
+            host = Dns.GetHostEntry(hostname);
+
+            foreach (IPAddress ip in host.AddressList)
+            {
+                if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                {
+                    //System.Diagnostics.Debug.WriteLine("LocalIPadress: " + ip);
+                    return ip.ToString();
+                }
+            }
+            return string.Empty;
+        }
         private bool checkFritzBox()
         {
             if (CheckNetworkConnection() && CheckFritzBoxReachability())
@@ -140,6 +155,23 @@ namespace FBReconnect
                 return false;
             }
         }
+        public static string GetGatewayAddress()
+        {
+            NetworkInterface[] adapters = NetworkInterface.GetAllNetworkInterfaces();
+
+            foreach (NetworkInterface adapter in adapters)
+            {
+                IPInterfaceProperties adapterProperties = adapter.GetIPProperties();
+                GatewayIPAddressInformationCollection addresses = adapterProperties.GatewayAddresses;
+
+                if (addresses.Count > 0)
+                {
+                    return addresses[0].Address.ToString();
+                }
+            }
+
+            return "0.0.0.0";
+        }
         public static IPAddress GetDefaultGateway()
         {
             IPAddress result = null;
@@ -181,7 +213,8 @@ namespace FBReconnect
 
         private async void InitializeApp()
         {
-            fbUrl = String.Format("http://{0}:49000/tr64desc.xml", GetDefaultGateway());
+            fbUrl = "http://fritz.box:49000/tr64desc.xml";
+//            fbUrl = String.Format("http://{0}:49000/tr64desc.xml", GetGatewayAddress());
             isFitzBox = CheckFritzBoxReachability();
 
             if (isFitzBox)
@@ -196,7 +229,7 @@ namespace FBReconnect
                 FBName = Properties.Resources.NoFritzBox;
                 FBSerial = "-";
             }
-            privIp = GetDefaultGateway().ToString();
+            privIp = GetIPAddress("fritz.box").ToString();
             // Call the asynchronous initialization method
             await InitializeAsync();
 
@@ -312,7 +345,7 @@ namespace FBReconnect
             reconnectButton.Dock = DockStyle.Fill;
             reconnectButton.Size = size;
             System.Windows.Forms.ToolTip ToolTip2 = new System.Windows.Forms.ToolTip();
-            if (!isFitzBox)
+            if (isFitzBox)
             {
                 reconnectButton.Cursor = Cursors.Hand;
                 reconnectButton.Click += ReconnectFritzBox_Click;
@@ -495,7 +528,8 @@ namespace FBReconnect
         {
             try
             {
-                String Request = String.Format("http://{0}:49000/igdupnp/control/WANIPConn1", GetDefaultGateway());
+                String Request = "http://fritz.box:49000/igdupnp/control/WANIPConn1";
+//                String Request = String.Format("http://{0}:49000/igdupnp/control/WANIPConn1", GetGatewayAddress());
                 var httpRequest = (HttpWebRequest)WebRequest.Create(Request);
                 httpRequest.Method = "POST";
                 httpRequest.Headers["SOAPACTION"] = "urn:schemas-upnp-org:service:WANIPConnection:1#ForceTermination";
