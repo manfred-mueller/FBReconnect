@@ -28,7 +28,7 @@ jobs:
       - name: Find setup file and extract version
         id: get_version
         run: |
-          SETUP_FILE=$(ls ./bin/Release/${{ env.REPO_NAME }}_setup-*.exe | tail -n 1)
+          SETUP_FILE=$(ls ./bin/Release/${{ env.REPO_NAME }}_Setup-*.exe | tail -n 1)
           if [ -z "$SETUP_FILE" ]; then
             echo "Setup file not found!"
             exit 1
@@ -95,7 +95,7 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./bin/Release/${{ env.REPO_NAME }}_Setup-${{ env.VERSION }}.exe
-          asset_name: ${{ env.REPO_NAME }}_setup-${{ env.VERSION }}.exe
+          asset_name: ${{ env.REPO_NAME }}_Setup-${{ env.VERSION }}.exe
           asset_content_type: application/octet-stream
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
